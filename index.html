@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malla Curricular - Economía</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --approved-color: #27ae60;
+            --blocked-color: #e74c3c;
+            --pending-color: #ecf0f1;
+            --hover-color: #f1c40f;
+            --border-color: #bdc3c7;
+            --text-color: #2c3e50;
+            --light-text: #ecf0f1;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .stats {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        
+        .stat-item {
+            font-size: 1.1rem;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: var(--secondary-color);
+        }
+        
+        .curriculum-container {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            gap: 15px;
+        }
+        
+        .semester {
+            min-width: 280px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+        
+        .semester-header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .subjects-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .subject {
+            padding: 15px;
+            border-radius: 5px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border-color);
+            background-color: var(--pending-color);
+        }
+        
+        .subject:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subject.approved {
+            background-color: var(--approved-color);
+            color: white;
+            border-color: #219653;
+        }
+        
+        .subject.blocked {
+            background-color: var(--blocked-color);
+            color: white;
+            cursor: not-allowed;
+            border-color: #c0392b;
+            opacity: 0.7;
+        }
+        
+        .subject-code {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .subject-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .subject-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+        
+        .credits {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        
+        .subject.approved .credits {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            width: 250px;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        .subject.blocked:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .curriculum-container {
+                flex-direction: column;
+            }
+            
+            .semester {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Economía</h1>
+        <div class="subtitle">Plan de estudios - Pregrado</div>
+        <div class="controls">
+            <button id="resetBtn">Reiniciar Progreso</button>
+            <button id="simulateBtn">Simular Completado</button>
+        </div>
+    </header>
+    
+    <div class="stats">
+        <div class="stat-item">
+            Créditos aprobados: <span id="credits-approved" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+            Materias aprobadas: <span id="subjects-approved" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+            Progreso: <span id="progress-percent" class="stat-value">0%</span>
+        </div>
+    </div>
+    
+    <div class="curriculum-container" id="curriculum-container">
+        <!-- Semestres se generarán con JavaScript -->
+    </div>
+    
+    <div class="footer">
+        SNIES: 1298 | Total de créditos del programa: 136
+    </div>
+
+    <script>
+        // Datos del plan de estudios
+        const subjectsData = [
+            // Semestre 1
+            {
+                id: 1,
+                name: "Precálculo",
+                code: "11310044",
+                credits: 3,
+                semester: 1,
+                prerequisites: [],
+                row: 1
+            },
+            {
+                id: 2,
+                name: "Cátedra Rosarista",
+                code: "60110260",
+                credits: 2,
+                semester: 1,
+                prerequisites: [],
+                row: 2
+            },
+            {
+                id: 3,
+                name: "Introducción a la Ciencia Económica",
+                code: "13210150",
+                credits: 3,
+                semester: 1,
+                prerequisites: [],
+                row: 3
+            },
+            {
+                id: 4,
+                name: "Más que Google",
+                code: "ELECTIVA1",
+                credits: 3,
+                semester: 1,
+                prerequisites: [],
+                row: 4
+            },
+            
+            // Semestre 2
+            {
+                id: 5,
+                name: "Programación de Computadores",
+                code: "11310002",
+                credits: 3,
+                semester: 2,
+                prerequisites: [],
+                row: 5
+            },
+            {
+                id: 6,
+                name: "Lógica y matemáticas discretas",
+                code: "73210072",
+                credits: 3,
+                semester: 2,
+                prerequisites: [],
+                row: 6
+            },
+            {
+                id: 7,
+                name: "Ética",
+                code: "17210004",
+                credits: 3,
+                semester: 2,
+                prerequisites: [],
+                row: 7
+            },
+            {
+                id: 8,
+                name: "Cálculo I",
+                code: "11310003",
+                credits: 3,
+                semester: 2,
+                prerequisites: [1], // Precálculo
+                row: 8
+            },
+            
+            // Semestre 3
+            {
+                id: 9,
+                name: "Álgebra Lineal",
+                code: "11310030",
+                credits: 3,
+                semester: 3,
+                prerequisites: [8], // Cálculo I
+                row: 9
+            },
+            {
+                id: 10,
+                name: "Medición Económica",
+                code: "13210070",
+                credits: 3,
+                semester: 3,
+                prerequisites: [3], // Introducción a la Ciencia Económica
+                row: 10
+            },
+            {
+                id: 11,
+                name: "Cálculo II",
+                code: "11310004",
+                credits: 3,
+                semester: 3,
+                prerequisites: [8], // Cálculo I
+                row: 11
+            },
+            {
+                id: 12,
+                name: "Probabilidad",
+                code: "73210073",
+                credits: 3,
+                semester: 3,
+                prerequisites: [11], // Cálculo II
+                row: 12
+            },
+            
+            // Semestre 4
+            {
+                id: 13,
+                name: "Microeconomía I",
+                code: "13210071",
+                credits: 3,
+                semester: 4,
+                prerequisites: [3], // Introducción a la Ciencia Económica
+                row: 13
+            },
+            {
+                id: 14,
+                name: "Electiva General",
+                code: "ELECTIVA2",
+                credits: 3,
+                semester: 4,
+                prerequisites: [],
+                row: 14
+            },
+            {
+                id: 15,
+                name: "Historia Económica General",
+                code: "13210134",
+                credits: 3,
+                semester: 4,
+                prerequisites: [],
+                row: 15
+            },
+            {
+                id: 16,
+                name: "Lectura Crítica para Economía y Finanzas",
+                code: "18610434",
+                credits: 2,
+                semester: 4,
+                prerequisites: [],
+                row: 16
+            },
+            
+            // Semestre 5
+            {
+                id: 17,
+                name: "Estadística",
+                code: "73210074",
+                credits: 3,
+                semester: 5,
+                prerequisites: [12], // Probabilidad
+                row: 17
+            },
+            {
+                id: 18,
+                name: "Economía Matemática",
+                code: "13210074",
+                credits: 3,
+                semester: 5,
+                prerequisites: [9, 11], // Álgebra Lineal, Cálculo II
+                row: 18
+            },
+            {
+                id: 19,
+                name: "Electiva General",
+                code: "ELECTIVA3",
+                credits: 3,
+                semester: 5,
+                prerequisites: [],
+                row: 19
+            },
+            {
+                id: 20,
+                name: "Microeconomía II",
+                code: "13210072",
+                credits: 3,
+                semester: 5,
+                prerequisites: [3, 13], // Introducción, Microeconomía I
+                row: 20
+            },
+            
+            // Semestre 6
+            {
+                id: 21,
+                name: "Macroeconomía I",
+                code: "13210073",
+                credits: 3,
+                semester: 6,
+                prerequisites: [13], // Microeconomía I
+                row: 21
+            },
+            {
+                id: 22,
+                name: "Escritura Académica para Economía y Finanzas",
+                code: "18610435",
+                credits: 2,
+                semester: 6,
+                prerequisites: [],
+                row: 22
+            },
+            {
+                id: 23,
+                name: "Econometría Básica",
+                code: "13210076",
+                credits: 3,
+                semester: 6,
+                prerequisites: [13], // Microeconomía I
+                row: 23
+            },
+            {
+                id: 24,
+                name: "Microeconomía III",
+                code: "13210179",
+                credits: 3,
+                semester: 6,
+                prerequisites: [20], // Microeconomía II
+                row: 24
+            },
+            
+            // Semestre 7
+            {
+                id: 25,
+                name: "Macroeconomía II",
+                code: "13210075",
+                credits: 3,
+                semester: 7,
+                prerequisites: [15, 21], // Historia Económica General, Macroeconomía I
+                row: 25
+            },
+            {
+                id: 26,
+                name: "Historia Económica Colombiana",
+                code: "13210180",
+                credits: 3,
+                semester: 7,
+                prerequisites: [],
+                row: 26
+            },
+            {
+                id: 27,
+                name: "Constitución Política e Instrucción Cívica",
+                code: "11210007",
+                credits: 2,
+                semester: 7,
+                prerequisites: [],
+                row: 27
+            },
+            {
+                id: 28,
+                name: "Macroeconomía III",
+                code: "13210181",
+                credits: 3,
+                semester: 7,
+                prerequisites: [15, 23], // Historia Económica General, Econometría Básica
+                row: 28
+            },
+            
+            // Semestre 8
+            {
+                id: 29,
+                name: "Comunicando Economía",
+                code: "36010002",
+                credits: 2,
+                semester: 8,
+                prerequisites: [],
+                row: 29
+            },
+            {
+                id: 30,
+                name: "Asignatura de Área Menor",
+                code: "MENOR1",
+                credits: 3,
+                semester: 8,
+                prerequisites: [],
+                row: 30
+            },
+            {
+                id: 31,
+                name: "Electiva General",
+                code: "ELECTIVA4",
+                credits: 3,
+                semester: 8,
+                prerequisites: [],
+                row: 31
+            },
+            {
+                id: 32,
+                name: "Electiva General",
+                code: "ELECTIVA5",
+                credits: 3,
+                semester: 8,
+                prerequisites: [],
+                row: 32
+            },
+            {
+                id: 33,
+                name: "Opción de grado",
+                code: "OPCION_GRADO",
+                credits: 12,
+                semester: 8,
+                prerequisites: [],
+                row: 33
+            }
+        ];
+
+        // Estado de la aplicación
+        let approvedSubjects = {};
+        const STORAGE_KEY = "economy_curriculum_progress";
+
+        // Elementos DOM
+        const curriculumContainer = document.getElementById('curriculum-container');
+        const resetBtn = document.getElementById('resetBtn');
+        const simulateBtn = document.getElementById('simulateBtn');
+        const creditsApprovedEl = document.getElementById('credits-approved');
+        const subjectsApprovedEl = document.getElementById('subjects-approved');
+        const progressPercentEl = document.getElementById('progress-percent');
+
+        // Inicializar aplicación
+        function init() {
+            loadProgress();
+            renderCurriculum();
+            updateStats();
+            setupEventListeners();
+        }
+
+        // Cargar progreso desde localStorage
+        function loadProgress() {
+            const savedProgress = localStorage.getItem(STORAGE_KEY);
+            if (savedProgress) {
+                approvedSubjects = JSON.parse(savedProgress);
+            } else {
+                subjectsData.forEach(subject => {
+                    approvedSubjects[subject.id] = false;
+                });
+            }
+        }
+
+        // Guardar progreso en localStorage
+        function saveProgress() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(approvedSubjects));
+        }
+
+        // Renderizar malla curricular
+        function renderCurriculum() {
+            curriculumContainer.innerHTML = '';
+            
+            // Agrupar materias por semestre
+            const subjectsBySemester = {};
+            subjectsData.forEach(subject => {
+                if (!subjectsBySemester[subject.semester]) {
+                    subjectsBySemester[subject.semester] = [];
+                }
+                subjectsBySemester[subject.semester].push(subject);
+            });
+            
+            // Crear semestres
+            for (let semester = 1; semester <= 8; semester++) {
+                const semesterSubjects = subjectsBySemester[semester] || [];
+                
+                const semesterEl = document.createElement('div');
+                semesterEl.className = 'semester';
+                
+                const header = document.createElement('div');
+                header.className = 'semester-header';
+                header.textContent = `Semestre ${semester}`;
+                semesterEl.appendChild(header);
+                
+                const subjectsContainer = document.createElement('div');
+                subjectsContainer.className = 'subjects-container';
+                
+                // Ordenar por fila para mantener el orden del PDF
+                semesterSubjects.sort((a, b) => a.row - b.row);
+                
+                // Crear materias
+                semesterSubjects.forEach(subject => {
+                    const subjectEl = document.createElement('div');
+                    subjectEl.className = 'subject';
+                    subjectEl.dataset.id = subject.id;
+                    
+                    // Determinar estado de la materia
+                    const prerequisitesMet = checkPrerequisites(subject);
+                    const isApproved = approvedSubjects[subject.id];
+                    
+                    if (isApproved) {
+                        subjectEl.classList.add('approved');
+                    } else if (!prerequisitesMet) {
+                        subjectEl.classList.add('blocked');
+                    }
+                    
+                    subjectEl.innerHTML = `
+                        <div class="subject-code">${subject.code}</div>
+                        <div class="subject-name">${subject.name}</div>
+                        <div class="subject-info">
+                            <div>${getPrerequisiteStatus(subject, prerequisitesMet)}</div>
+                            <div class="credits">${subject.credits} créditos</div>
+                        </div>
+                        <div class="tooltip">${generateTooltipText(subject, prerequisitesMet)}</div>
+                    `;
+                    
+                    subjectEl.addEventListener('click', () => toggleSubjectStatus(subject, prerequisitesMet));
+                    subjectsContainer.appendChild(subjectEl);
+                });
+                
+                semesterEl.appendChild(subjectsContainer);
+                curriculumContainer.appendChild(semesterEl);
+            }
+        }
+
+        // Verificar si se cumplen los prerrequisitos
+        function checkPrerequisites(subject) {
+            return subject.prerequisites.every(prereqId => approvedSubjects[prereqId]);
+        }
+
+        // Generar texto para tooltip
+        function generateTooltipText(subject, prerequisitesMet) {
+            if (prerequisitesMet) {
+                return "Haz clic para marcar como aprobada";
+            }
+            
+            if (subject.prerequisites.length === 0) {
+                return "No tiene prerrequisitos";
+            }
+            
+            const missingPrerequisites = subject.prerequisites
+                .filter(prereqId => !approvedSubjects[prereqId])
+                .map(prereqId => {
+                    const prereq = subjectsData.find(s => s.id === prereqId);
+                    return prereq ? prereq.name : "";
+                })
+                .filter(name => name !== "");
+                
+            if (missingPrerequisites.length === 0) {
+                return "Prerrequisitos completados";
+            }
+            
+            return `Falta completar: ${missingPrerequisites.join(', ')}`;
+        }
+
+        // Obtener estado de prerrequisitos para mostrar en tarjeta
+        function getPrerequisiteStatus(subject, prerequisitesMet) {
+            if (subject.prerequisites.length === 0) return "Sin prerrequisitos";
+            return prerequisitesMet ? "Prerrequisitos completados" : "Prerrequisitos pendientes";
+        }
+
+        // Alternar estado de aprobación de una materia
+        function toggleSubjectStatus(subject, prerequisitesMet) {
+            // Solo permitir cambiar estado si los prerrequisitos están completados o no hay prerrequisitos
+            if (!prerequisitesMet && subject.prerequisites.length > 0) return;
+            
+            approvedSubjects[subject.id] = !approvedSubjects[subject.id];
+            saveProgress();
+            renderCurriculum();
+            updateStats();
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            let approvedCount = 0;
+            let totalCredits = 0;
+            let approvedCredits = 0;
+            
+            subjectsData.forEach(subject => {
+                totalCredits += subject.credits;
+                if (approvedSubjects[subject.id]) {
+                    approvedCount++;
+                    approvedCredits += subject.credits;
+                }
+            });
+            
+            const progressPercent = Math.round((approvedCredits / totalCredits) * 100);
+            
+            subjectsApprovedEl.textContent = approvedCount;
+            creditsApprovedEl.textContent = approvedCredits;
+            progressPercentEl.textContent = `${progressPercent}%`;
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            resetBtn.addEventListener('click', () => {
+                if (confirm("¿Estás seguro de que quieres reiniciar todo tu progreso?")) {
+                    subjectsData.forEach(subject => {
+                        approvedSubjects[subject.id] = false;
+                    });
+                    saveProgress();
+                    renderCurriculum();
+                    updateStats();
+                }
+            });
+            
+            simulateBtn.addEventListener('click', () => {
+                // Marcar todas las materias como aprobadas
+                subjectsData.forEach(subject => {
+                    approvedSubjects[subject.id] = true;
+                });
+                saveProgress();
+                renderCurriculum();
+                updateStats();
+            });
+        }
+
+        // Iniciar la aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
